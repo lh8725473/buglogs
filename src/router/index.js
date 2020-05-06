@@ -78,14 +78,23 @@ export const constantRoutes = [
   },
 
   {
-    path: '/form',
+    path: '/bug',
     component: Layout,
+    redirect: '/bug/add',
+    name: 'Bug',
+    meta: { title: 'bug管理', icon: 'example' },
     children: [
       {
-        path: 'index',
-        name: 'Form',
-        component: () => import('@/views/form/index'),
+        path: 'add',
+        name: 'addBug',
+        component: () => import('@/views/bug/index'),
         meta: { title: '提交bug', icon: 'form' }
+      },
+      {
+        path: 'list',
+        name: 'listBug',
+        component: () => import('@/views/table/index'),
+        meta: { title: 'bug列表', icon: 'form' }
       }
     ]
   },

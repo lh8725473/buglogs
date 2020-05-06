@@ -4,6 +4,31 @@
       <el-form-item label="提醒邮箱">
         <el-input v-model="form.name" />
       </el-form-item>
+      <el-form-item label="是否发送bug文件附件">
+        <el-input v-model="form.name" />
+      </el-form-item>
+      <el-form-item label="Bug管理员登录用户名">
+        <el-input v-model="form.name" />
+      </el-form-item>
+      <el-form-item label="Bug管理员登录密码">
+        <el-input v-model="form.name" />
+      </el-form-item>
+      <el-form-item label="客户端id">
+        <el-input v-model="form.name" />
+      </el-form-item>
+      <el-form-item label="客户名字">
+        <el-input v-model="form.name" />
+      </el-form-item>
+      <el-form-item label="客户联系人">
+        <el-input v-model="form.name" />
+      </el-form-item>
+      <el-form-item label="客户联系人电话">
+        <el-input v-model="form.name" />
+      </el-form-item>
+      <el-form-item label="客户地址">
+        <el-input v-model="form.name" />
+      </el-form-item>
+
       <el-form-item label="Activity zone">
         <el-select v-model="form.region" placeholder="please select your zone">
           <el-option label="Zone one" value="shanghai" />
