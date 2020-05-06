@@ -93,7 +93,7 @@ export const constantRoutes = [
       {
         path: 'list',
         name: 'listBug',
-        component: () => import('@/views/table/index'),
+        component: () => import('@/views/bug/list'),
         meta: { title: 'bug列表', icon: 'form' }
       }
     ]

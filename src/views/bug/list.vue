@@ -13,30 +13,49 @@
           {{ scope.$index }}
         </template>
       </el-table-column>
-      <el-table-column label="Title">
+      <el-table-column label="标题">
         <template slot-scope="scope">
-          {{ scope.row.title }}
+          {{ scope.row.name }}
         </template>
       </el-table-column>
-      <el-table-column label="Author" width="110" align="center">
+      <el-table-column label="描述" width="110" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.author }}</span>
+          <span>{{ scope.row.description }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="Pageviews" width="110" align="center">
+      <el-table-column label="版本" width="110" align="center">
         <template slot-scope="scope">
-          {{ scope.row.pageviews }}
+          <span>{{ scope.row.osVer }}</span>
         </template>
       </el-table-column>
-      <el-table-column class-name="status-col" label="Status" width="110" align="center">
+      <el-table-column label="创建时间" width="110" align="center">
+        <template slot-scope="scope">
+          {{ scope.row.createTime }}
+        </template>
+      </el-table-column>
+      <el-table-column label="提出人" width="110" align="center">
+        <template slot-scope="scope">
+          {{ scope.row.userName }}
+        </template>
+      </el-table-column>
+      <el-table-column class-name="status-col" label="状态" width="110" align="center">
         <template slot-scope="scope">
           <el-tag :type="scope.row.status | statusFilter">{{ scope.row.status }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column align="center" prop="created_at" label="Display_time" width="200">
+      <el-table-column label="修复人" width="110" align="center">
         <template slot-scope="scope">
-          <i class="el-icon-time" />
-          <span>{{ scope.row.display_time }}</span>
+          {{ scope.row.fixer }}
+        </template>
+      </el-table-column>
+      <el-table-column label="修复时间" width="110" align="center">
+        <template slot-scope="scope">
+          {{ scope.row.fixTime }}
+        </template>
+      </el-table-column>
+      <el-table-column class-name="status-col" label="日志数量" width="110" align="center">
+        <template slot-scope="scope">
+          <el-tag :type="scope.row.logFileNum | statusFilter">{{ scope.row.logFileNum }}</el-tag>
         </template>
       </el-table-column>
     </el-table>
@@ -50,9 +69,9 @@ export default {
   filters: {
     statusFilter(status) {
       const statusMap = {
-        published: 'success',
-        draft: 'gray',
-        deleted: 'danger'
+        1: 'success',
+        2: 'gray',
+        3: 'danger'
       }
       return statusMap[status]
     }
