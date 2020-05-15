@@ -54,12 +54,14 @@
 
 <script>
 import { validUsername } from '@/utils/validate'
+import { login } from '@/api/user'
+import md5js from 'js-md5'
 
 export default {
   name: 'Login',
   data() {
     const validateUsername = (rule, value, callback) => {
-      if (!validUsername(value)) {
+      if (value.length < 6) {
         callback(new Error('Please enter the correct user name'))
       } else {
         callback()
@@ -74,8 +76,8 @@ export default {
     }
     return {
       loginForm: {
-        username: 'admin',
-        password: '111111'
+        username: 'bugadmin',
+        password: '123456'
       },
       loginRules: {
         username: [{ required: true, trigger: 'blur', validator: validateUsername }],
@@ -106,20 +108,34 @@ export default {
       })
     },
     handleLogin() {
+      console.log('handleLogin')
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.loading = true
-          this.$store.dispatch('user/login', this.loginForm).then(() => {
-            this.$router.push({ path: this.redirect || '/' })
-            this.loading = false
-          }).catch(() => {
-            this.loading = false
+          const postLoginForm = this.loginForm
+          console.log(md5js(this.loginForm.password))
+          postLoginForm.pwd = md5js(this.loginForm.password)
+          login(postLoginForm).then(response => {
+            this.$store.dispatch('app/toggleUserId', response.userId)
+            this.$store.dispatch('app/toggleToken', response.token)
+            this.$router.push({ path: '/bug/list' })
           })
-        } else {
-          console.log('error submit!!')
-          return false
         }
       })
+      // this.$refs.loginForm.validate(valid => {
+      //   if (valid) {
+      //     this.loading = true
+      //     this.$store.dispatch('user/login', this.loginForm).then(() => {
+      //       this.$router.push({ path: this.redirect || '/' })
+      //       this.loading = false
+      //     }).catch(() => {
+      //       this.loading = false
+      //     })
+      //   } else {
+      //     console.log('error submit!!')
+      //     return false
+      //   }
+      // })
     }
   }
 }

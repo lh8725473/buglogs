@@ -63,3 +63,11 @@ div:focus {
 .app-container {
   padding: 20px;
 }
+
+.el-timeline{
+  padding-left: 0;
+}
+
+.el-timeline-item:last-child {
+  padding-bottom: 0;
+}

@@ -20,12 +20,12 @@ const data = Mock.mock({
 
 export default [
   {
-    url: '/bsbug/page',
+    url: '/123/132',
     type: 'get',
     response: config => {
       const items = data.items
       return {
-        code: 20000,
+        code: 888,
         data: {
           total: items.length,
           items: items
