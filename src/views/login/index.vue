@@ -54,7 +54,8 @@
 
 <script>
 import { validUsername } from '@/utils/validate'
-import { login } from '@/api/user'
+import { setToken, setUserId } from '@/utils/auth'
+import { login, getuserrole } from '@/api/user'
 import md5js from 'js-md5'
 
 export default {
@@ -118,7 +119,12 @@ export default {
           login(postLoginForm).then(response => {
             this.$store.dispatch('app/toggleUserId', response.userId)
             this.$store.dispatch('app/toggleToken', response.token)
-            this.$router.push({ path: '/bug/list' })
+            setToken(response.token)
+            setUserId(response.userId)
+            getuserrole().then(response => {
+              this.$store.dispatch('app/toggleRole', response)
+              this.$router.push({ path: '/bug/list' })
+            })
           })
         }
       })

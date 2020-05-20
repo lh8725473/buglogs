@@ -39,3 +39,11 @@ export function testmailconfig(data) {
     data
   })
 }
+
+export function restPwd(data) {
+  return request({
+    url: '/bsconfig/restPwd',
+    method: 'post',
+    data
+  })
+}

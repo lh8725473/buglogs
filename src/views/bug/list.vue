@@ -101,6 +101,7 @@
       layout="prev, pager, next"
       :page-size="10"
       :total="total"
+      @current-change="pageChange"
     />
 
     <el-dialog title="日志列表" :visible.sync="dialogBugFileList" width="70%">
@@ -253,7 +254,8 @@ export default {
   },
   computed: {
     ...mapGetters([
-      'userId'
+      'userId',
+      'token'
     ])
   },
   data() {
@@ -262,7 +264,7 @@ export default {
         userId: this.$store.state.app.userId,
         status: '',
         startTime: '2020-04-29 09:10:10',
-        endTime: '2020-05-29 09:10:10',
+        endTime: '',
         index: 0,
         size: 10
       },
@@ -296,9 +298,7 @@ export default {
   methods: {
     fetchData() {
       this.listLoading = true
-      console.log(this.getBugListParams)
       getbuglist(this.getBugListParams).then(response => {
-        console.log(response)
         this.list = response.data
         this.total = response.total
         this.listLoading = false
@@ -309,7 +309,6 @@ export default {
       listbsbugfile({
         bugId: bugId
       }).then(response => {
-        console.log(response)
         this.dialogBugFileList = true
         this.bugFileList = response
         // this.list = response.data
@@ -374,18 +373,16 @@ export default {
             this.bugFileList = response
           })
         }
-        console.log(response)
       })
     },
     downloadFile(file) {
       if (file.filePathType === 2) {
         window.open(file.filePath)
       } else {
-        window.open(process.env + '/bsbug/downloadbugfile?id=' + file.id)
+        window.open(process.env.VUE_APP_BASE_API + '/bsbug/downloadbugfile?id=' + file.id + '&token=' + this.$store.state.app.token + '&userId=' + this.$store.state.app.userId)
       }
     },
     editBug(bug) {
-      console.log(bug)
       this.$router.push('/bug/edit?bugId=' + bug.bugId)
     },
     addBug() {
@@ -445,7 +442,6 @@ export default {
     },
     bugFileSelectionChange(val) {
       this.bugFileMultipleSelection = val
-      console.log(this.bugFileMultipleSelection.length)
       this.buttonDis.deleteFile = !(this.bugFileMultipleSelection.length > 0)
     },
     resolves() {
@@ -494,7 +490,6 @@ export default {
     getbsbugfiletypes() {
       getbsbugfiletypes().then(response => {
         this.bugfiletypes = response
-        console.log(this.getTreeAllIds(this.bugfiletypes))
         this.form.fileType = response
       })
     },
@@ -516,6 +511,10 @@ export default {
       }).then(response => {
         this.activities = response
       })
+    },
+    pageChange(page) {
+      this.getBugListParams.index = (page - 1) * 10
+      this.fetchData()
     }
   }
 }

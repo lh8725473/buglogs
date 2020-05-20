@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { MessageBox, Message } from 'element-ui'
 import store from '@/store'
-import { getToken } from '@/utils/auth'
+import { getToken, setToken, setUserId, setBaseURL, getBaseURL } from '@/utils/auth'
 
 // create an axios instance
 function GetRequest() {
@@ -20,6 +20,17 @@ console.log(GetRequest())
 if (GetRequest()) {
   if (GetRequest().prefix) {
     baseURL = baseURL + '/' + GetRequest().prefix
+    setBaseURL(baseURL)
+  } else {
+    if (getBaseURL()) {
+      baseURL = getBaseURL()
+    }
+  }
+  if (GetRequest().token) {
+    setToken(GetRequest().token)
+  }
+  if (GetRequest().userId) {
+    setUserId(GetRequest().userId)
   }
 }
 console.log(baseURL)
@@ -41,13 +52,6 @@ service.interceptors.request.use(
       if (store.getters.userId) {
         config.params.userId = store.getters.userId
       }
-
-      // if (!config.params.userId) {
-      //   config.params.userId = '1111'
-      // }
-      if (!config.params.token) {
-        config.params.token = config.params.userId
-      }
     } else {
       config.params = {}
       if (store.getters.token) {
@@ -56,10 +60,6 @@ service.interceptors.request.use(
 
       if (store.getters.userId) {
         config.params.userId = store.getters.userId
-      }
-
-      if (!config.params.token) {
-        config.params.token = config.params.userId
       }
     }
     // if (store.getters.token) {
@@ -88,11 +88,8 @@ service.interceptors.response.use(
    */
   response => {
     const res = response.data
-    console.log(response)
-    console.log(response.data)
 
     // if the custom code is not 20000, it is judged as an error.
-    console.log(res.status)
     if (res.status !== 1) {
       Message({
         message: res.message || 'Error',
@@ -115,7 +112,6 @@ service.interceptors.response.use(
       // }
       return Promise.reject(new Error(res.message || 'Error'))
     } else {
-      console.log(response)
       return res.data
     }
   },

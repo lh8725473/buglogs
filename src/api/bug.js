@@ -120,3 +120,10 @@ export function totalBugFileSize(params) {
   })
 }
 
+export function getMaxBugTime(params) {
+  return request({
+    url: '/bsbug/getMaxBugTime',
+    method: 'get',
+    params
+  })
+}

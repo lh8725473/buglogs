@@ -13,7 +13,7 @@
         </div>
         <el-dropdown-menu slot="dropdown" class="user-dropdown">
           <a>
-            <el-dropdown-item>修改密码</el-dropdown-item>
+            <el-dropdown-item @click.native="dialogFormVisible = true">修改密码</el-dropdown-item>
           </a>
           <el-dropdown-item divided @click.native="logout">
             <span style="display:block;">退出</span>
@@ -21,6 +21,24 @@
         </el-dropdown-menu>
       </el-dropdown>
     </div>
+
+    <el-dialog title="修改密码" :visible.sync="dialogFormVisible">
+      <el-form :model="form">
+        <el-form-item label="旧密码">
+          <el-input v-model="form.LOGIN_PWD_OLD" autocomplete="off" />
+        </el-form-item>
+        <el-form-item label="新密码">
+          <el-input v-model="form.LOGIN_PWD" autocomplete="off" />
+        </el-form-item>
+        <el-form-item label="确认新密码">
+          <el-input v-model="form.LOGIN_PWD_REVIEW" autocomplete="off" />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisible = false">取 消</el-button>
+        <el-button type="primary" @click="restPwd()">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -30,6 +48,7 @@ import Breadcrumb from '@/components/Breadcrumb'
 import Hamburger from '@/components/Hamburger'
 import { logout } from '@/api/user'
 import { totalBugFileSize } from '@/api/bug'
+import { restPwd } from '@/api/config'
 
 export default {
   components: {
@@ -66,7 +85,13 @@ export default {
   },
   data() {
     return {
-      totalBugFileSize: 0
+      totalBugFileSize: 0,
+      dialogFormVisible: false,
+      form: {
+        LOGIN_PWD: '',
+        LOGIN_PWD_OLD: '',
+        LOGIN_PWD_REVIEW: ''
+      }
     }
   },
   created() {
@@ -85,8 +110,14 @@ export default {
     },
     getTotalBugFileSize() {
       totalBugFileSize().then(response => {
-        console.log(response)
         this.totalBugFileSize = response
+      })
+    },
+    restPwd() {
+      restPwd(this.form).then(response => {
+        if (response) {
+          this.$message('修改密码成功')
+        }
       })
     }
   }

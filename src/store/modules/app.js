@@ -5,6 +5,7 @@ const state = {
   isInited: false,
   userId: '',
   token: '',
+  role: '',
   sidebar: {
     opened: Cookies.get('sidebarStatus') ? !!+Cookies.get('sidebarStatus') : true,
     withoutAnimation: false
@@ -24,6 +25,9 @@ const mutations = {
   },
   TOGGLE_TOKEN: (state, token) => {
     state.token = token
+  },
+  TOGGLE_ROLE: (state, role) => {
+    state.role = role
   },
   TOGGLE_SIDEBAR: state => {
     state.sidebar.opened = !state.sidebar.opened
@@ -57,6 +61,9 @@ const actions = {
   },
   toggleToken({ commit }, token) {
     commit('TOGGLE_TOKEN', token)
+  },
+  toggleRole({ commit }, role) {
+    commit('TOGGLE_ROLE', role)
   },
   toggleSideBar({ commit }) {
     commit('TOGGLE_SIDEBAR')

@@ -23,15 +23,24 @@ import { mapGetters } from 'vuex'
 import Logo from './Logo'
 import SidebarItem from './SidebarItem'
 import variables from '@/styles/variables.scss'
+import { getuserrole } from '@/api/user'
 
 export default {
   components: { SidebarItem, Logo },
   computed: {
     ...mapGetters([
-      'sidebar'
+      'sidebar',
+      'role'
     ]),
     routes() {
-      return this.$router.options.routes
+      console.log(this.role)
+      if (this.role === 'sysadmin') {
+        this.$router.options.routes[3].hidden = false
+        return this.$router.options.routes
+      } else {
+        this.$router.options.routes[3].hidden = true
+        return this.$router.options.routes
+      }
     },
     activeMenu() {
       const route = this.$route
@@ -50,6 +59,16 @@ export default {
     },
     isCollapse() {
       return !this.sidebar.opened
+    }
+  },
+  created() {
+    this.getuserrole()
+  },
+  methods: {
+    getuserrole() {
+      getuserrole().then(response => {
+        this.$store.dispatch('app/toggleRole', response)
+      })
     }
   }
 }

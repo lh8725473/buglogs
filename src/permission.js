@@ -3,9 +3,10 @@ import store from './store'
 // import { Message } from 'element-ui'
 import NProgress from 'nprogress' // progress bar
 import 'nprogress/nprogress.css' // progress bar style
-// import { getToken } from '@/utils/auth' // get token from cookie
+import { getToken, getUserId } from '@/utils/auth' // get token from cookie
 import getPageTitle from '@/utils/get-page-title'
 import { isInited } from '@/api/config'
+import { getuserrole } from '@/api/user'
 
 NProgress.configure({ showSpinner: false }) // NProgress Configuration
 
@@ -17,34 +18,66 @@ router.beforeEach(async(to, from, next) => {
 
   // set page title
   document.title = getPageTitle(to.meta.title)
-  console.log(store.getters.getIsInited)
   if (!store.getters.getIsInited) {
     isInited().then(response => {
       store.dispatch('app/toggleGetIsInited', true)
       store.dispatch('app/toggleIsInited', response)
       if (response) {
-        if (to.query.userId) {
+        if (to.query.userId && to.query.token) {
+          store.dispatch('app/toggleToken', to.query.token)
           store.dispatch('app/toggleUserId', to.query.userId)
-          next()
+          getuserrole().then(response => {
+            store.dispatch('app/toggleRole', response)
+            next()
+          })
         } else {
-          next('/login')
+          if (getToken() && getUserId()) {
+            store.dispatch('app/toggleToken', getToken())
+            store.dispatch('app/toggleUserId', getUserId())
+            getuserrole().then(response => {
+              store.dispatch('app/toggleRole', response)
+              next()
+            })
+          } else {
+            next('/login')
+          }
         }
       } else {
-        next('/configuration/index')
+        if (to.query.userId && to.query.token) {
+          store.dispatch('app/toggleToken', to.query.token)
+          store.dispatch('app/toggleUserId', to.query.userId)
+          next('/configuration/index')
+        } else {
+          if (getToken() && getUserId()) {
+            store.dispatch('app/toggleToken', getToken())
+            store.dispatch('app/toggleUserId', getUserId())
+            next('/configuration/index')
+          } else {
+            next('/login')
+          }
+        }
       }
     })
   } else {
-    if (!store.getters.userId && to.path !== '/login' && to.path !== '/configuration/index') {
-      if (to.query.userId) {
-        store.dispatch('app/toggleUserId', to.query.userId)
-        next()
-      } else {
+    if (!store.getters.token || !store.getters.userId) {
+      if (to.path !== '/login') {
         next('/login')
+      } else {
+        next()
       }
     } else {
       next()
     }
-    // next()
+    // if (!store.getters.userId && to.path !== '/login' && to.path !== '/configuration/index') {
+    //   if (to.query.userId) {
+    //     store.dispatch('app/toggleUserId', to.query.userId)
+    //     next()
+    //   } else {
+    //     next('/login')
+    //   }
+    // } else {
+    //   next()
+    // }
   }
 
   // determine whether the user has logged in

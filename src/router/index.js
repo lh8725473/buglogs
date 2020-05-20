@@ -108,6 +108,7 @@ export const constantRoutes = [
   {
     path: '/configuration',
     component: Layout,
+    hidden: true,
     children: [
       {
         path: 'index',

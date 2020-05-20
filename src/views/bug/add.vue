@@ -81,7 +81,7 @@
 
 <script>
 
-import { addbsbug, getbsbugfiletypes } from '@/api/bug'
+import { addbsbug, getbsbugfiletypes, getMaxBugTime } from '@/api/bug'
 import { getBugContentTemplate } from '@/api/config'
 import _ from 'lodash'
 
@@ -91,7 +91,7 @@ export default {
       form: {
         name: '',
         description: '',
-        userId: '1',
+        userId: this.$store.state.app.userId,
         userName: 'tester',
         email: 'tester@163.com',
         osVer: '',
@@ -108,12 +108,14 @@ export default {
       },
       bugfiletypes: [],
       defaultCheckedKeys: [],
-      knowledge: []
+      knowledge: [],
+      maxBugTime: 0
     }
   },
   created() {
     this.getbsbugfiletypes()
     this.getBugContentTemplate()
+    this.getMaxBugTime()
   },
   methods: {
     getBugContentTemplate() {
@@ -135,8 +137,10 @@ export default {
       })
     },
     addbsbug() {
-      // const postForm = this.form
-      // postForm.fileType = this.form.splice(',')
+      if (this.form.endTime.getTime() - this.form.startTime.getTime() > this.maxBugTime * 1000) {
+        this.$message('log记录时间超过最大限制:' + this.maxBugTime + 's')
+        return
+      }
       const postform = this.form
       if (this.form.extEmail) {
         postform.extEmail = this.form.extEmail.join(';')
@@ -181,6 +185,12 @@ export default {
         return !(reg.test(email))
       })
       console.log(emails)
+    },
+    getMaxBugTime() {
+      getMaxBugTime().then(response => {
+        this.maxBugTime = response
+        console.log(response)
+      })
     }
   }
 }

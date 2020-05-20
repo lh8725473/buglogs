@@ -1,6 +1,6 @@
 module.exports = {
 
-  title: 'Vue Admin Template',
+  title: '日志管理',
 
   /**
    * @type {boolean} true | false
