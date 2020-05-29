@@ -28,9 +28,16 @@
           {{ scope.row.name }}
         </template>
       </el-table-column>
-      <el-table-column label="描述" align="center" show-overflow-tooltip>
+      <el-table-column label="描述" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.description }}</span>
+          <el-tooltip
+            placement="top"
+          >
+            <div slot="content">
+              <div class="tooltipdescription">  {{ scope.row.description }} </div>
+            </div>
+            <div class="wrap_one"> {{ scope.row.description }} </div>
+          </el-tooltip>
         </template>
       </el-table-column>
       <el-table-column label="版本" align="center" width="100">
@@ -92,7 +99,7 @@
         <template slot-scope="scope">
           <el-button type="text" size="small" @click="deletebsbug(scope.row)">删除</el-button>
           <el-button type="text" size="small" @click="editBug(scope.row)">编辑</el-button>
-          <el-button type="text" size="small" @click="fixBug(scope.row)">修复</el-button>
+          <el-button type="text" size="small" :disabled="scope.row.status === 2" @click="fixBug(scope.row)">修复</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -137,20 +144,35 @@
               <el-date-picker v-model="bugFileform.endTime" :format="'yyyy-MM-dd HH:mm'" type="datetime" placeholder="选择结束时间" style="width: 100%;" />
             </el-col>
           </el-form-item>
-          <el-form-item label="数字类型">
+          <el-form-item label="是否上传到云端">
             <el-radio-group v-model="bugFileform.storageType">
-              <el-radio label="1">本地</el-radio>
-              <el-radio label="2">上传云端</el-radio>
+              <el-radio label="2" disabled>是</el-radio>
+              <el-radio label="1">否</el-radio>
             </el-radio-group>
           </el-form-item>
           <el-form-item label="收集的日志类型">
-            <el-checkbox-group v-model="bugFileform.fileType">
+            <el-tree
+              ref="tree"
+              :data="bugfiletypes"
+              :props="props"
+              node-key="id"
+              show-checkbox
+              :default-checked-keys="defaultCheckedKeys"
+              @check-change="handleCheckChange"
+            >
+              <span slot-scope="{ node, data }" class="custom-tree-node">
+                <el-tooltip class="item" effect="dark" :content="data.description" placement="right">
+                  <span>{{ node.label }}</span>
+                </el-tooltip>
+              </span>
+            </el-tree>
+            <!-- <el-checkbox-group v-model="bugFileform.fileType">
               <el-checkbox v-for="bugfiletype in bugfiletypes" :key="bugfiletype" :label="bugfiletype" name="type" />
-            </el-checkbox-group>
+            </el-checkbox-group> -->
           </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="addBugFile()">添加</el-button>
-            <el-button>取消</el-button>
+            <el-button @click="dialogAddBugFile = false">取消</el-button>
           </el-form-item>
         </el-form>
       </el-dialog>
@@ -170,7 +192,11 @@
         <el-table-column property="startTime" label="开始时间" />
         <el-table-column property="endTime" label="结束时间" />
         <el-table-column property="createTime" label="创建时间" />
-        <el-table-column property="fileSize" label="文件大小" />
+        <el-table-column property="fileSize" label="文件大小">
+          <template slot-scope="scope">
+            {{ scope.row.fileSize | fileSizeFilter }}
+          </template>
+        </el-table-column>
         <el-table-column property="fileType" label="文件类型" />
         <el-table-column property="status" label="状态">
           <template slot-scope="scope">
@@ -190,10 +216,10 @@
         <el-table-column
           fixed="right"
           label="操作"
-          width="120"
+          width="100"
         >
           <template slot-scope="scope">
-            <el-button type="text" size="small" @click="downloadFile(scope.row)">下载</el-button>
+            <el-button v-show="scope.row.status == 5" type="text" size="small" @click="downloadFile(scope.row)">下载</el-button>
             <el-button type="text" size="small" @click="deleteFile(scope.row)">删除</el-button>
           </template>
         </el-table-column>
@@ -205,7 +231,9 @@
 <script>
 import { mapGetters } from 'vuex'
 import _ from 'lodash'
-import { getbuglist, listbsbugfile, deletebsbugfile, deletebsbugfiles, addbsbugfile, deletebsbug, deletebsbugs, resolve, resolves, getbsbugfiletypes, logslistbybugid } from '@/api/bug'
+import { formatSeconds } from '@/utils/index'
+import { getBaseURL } from '@/utils/auth'
+import { getbuglist, listbsbugfile, deletebsbugfile, deletebsbugfiles, addbsbugfile, deletebsbug, deletebsbugs, resolve, resolves, getbsbugfiletypes, logslistbybugid, getMaxBugTime } from '@/api/bug'
 
 export default {
   filters: {
@@ -231,7 +259,8 @@ export default {
         4: '上传中',
         5: '已完成',
         6: '日志文件类型错误',
-        7: '日志保存失败'
+        7: '日志保存失败',
+        8: '日志为空'
       }
       return statusMap[status]
     },
@@ -250,6 +279,26 @@ export default {
         3: '上传完毕'
       }
       return uploadStatusMap[uploadStatus]
+    },
+    fileSizeFilter(limit) {
+      var size = ''
+      if (limit < 0.1 * 1024) { // 如果小于0.1KB转化成B
+        size = limit.toFixed(2) + 'B'
+      } else if (limit < 0.1 * 1024 * 1024) { // 如果小于0.1MB转化成KB
+        size = (limit / 1024).toFixed(2) + 'KB'
+      } else if (limit < 0.1 * 1024 * 1024 * 1024) { // 如果小于0.1GB转化成MB
+        size = (limit / (1024 * 1024)).toFixed(2) + 'MB'
+      } else { // 其他转化成GB
+        size = (limit / (1024 * 1024 * 1024)).toFixed(2) + 'GB'
+      }
+
+      var sizestr = size + ''
+      var len = sizestr.indexOf('\.')
+      var dec = sizestr.substr(len + 1, 2)
+      if (dec === '00') { // 当小数点后为00时 去掉小数部分
+        return sizestr.substring(0, len) + sizestr.substr(len + 3, 2)
+      }
+      return sizestr
     }
   },
   computed: {
@@ -278,7 +327,7 @@ export default {
         startTime: new Date(((new Date()).getTime() - 60 * 1000 * 3)),
         endTime: new Date(),
         storageType: '1',
-        fileType: ['前端', '后端']
+        fileType: []
       },
       multipleSelection: [],
       bugFileMultipleSelection: [],
@@ -288,8 +337,14 @@ export default {
         deleteFile: true
       },
       bugfiletypes: [],
-      reverse: true,
-      activities: []
+      reverse: false,
+      activities: [],
+      defaultCheckedKeys: [],
+      props: {
+        children: 'childs',
+        label: 'name'
+      },
+      maxBugTime: 0
     }
   },
   created() {
@@ -361,8 +416,24 @@ export default {
     onpenDialogBugFile() {
       this.dialogAddBugFile = true
       this.getbsbugfiletypes()
+      this.getMaxBugTime()
     },
     addBugFile() {
+      if (this.bugFileform.endTime.getTime() - this.bugFileform.startTime.getTime() > this.maxBugTime * 1000) {
+        this.$message('log记录时间超过最大限制:' + formatSeconds(this.maxBugTime))
+        return
+      }
+      if (this.bugFileform.endTime.getTime() - this.bugFileform.startTime.getTime() <= 0) {
+        this.$message('开始时间不能大于结束时间')
+        return
+      }
+      if (this.bugFileform.endTime.getTime() - (new Date()).getTime() > 0) {
+        this.$message('结束时间不能当前时间')
+        return
+      }
+      if (this.bugFileform.fileType) {
+        this.bugFileform.fileType = this.$refs.tree.getCheckedKeys().join(';')
+      }
       addbsbugfile(this.bugFileform).then(response => {
         if (response) {
           this.$message('添加bug日志成功')
@@ -379,7 +450,11 @@ export default {
       if (file.filePathType === 2) {
         window.open(file.filePath)
       } else {
-        window.open(process.env.VUE_APP_BASE_API + '/bsbug/downloadbugfile?id=' + file.id + '&token=' + this.$store.state.app.token + '&userId=' + this.$store.state.app.userId)
+        if (getBaseURL()) {
+          window.open(getBaseURL() + '/bsbug/downloadbugfile?id=' + file.id + '&token=' + this.$store.state.app.token + '&userId=' + this.$store.state.app.userId)
+        } else {
+          window.open(process.env.VUE_APP_BASE_API + '/bsbug/downloadbugfile?id=' + file.id + '&token=' + this.$store.state.app.token + '&userId=' + this.$store.state.app.userId)
+        }
       }
     },
     editBug(bug) {
@@ -481,6 +556,7 @@ export default {
         }).then(response => {
           if (response) {
             this.$message('删除成功')
+            this.getBugListParams.index = 0
             this.fetchData()
           }
         })
@@ -490,7 +566,9 @@ export default {
     getbsbugfiletypes() {
       getbsbugfiletypes().then(response => {
         this.bugfiletypes = response
-        this.form.fileType = response
+        console.log(this.getTreeAllIds(this.bugfiletypes))
+        this.defaultCheckedKeys = this.getTreeAllIds(this.bugfiletypes)
+        this.bugFileform.fileType = response
       })
     },
     getTreeAllIds(tree, ids) {
@@ -498,7 +576,7 @@ export default {
         ids = []
       }
       _.forEach(tree, (items) => {
-        ids.push(items.items)
+        ids.push(items.id)
         if (items.childs.length > 0) {
           this.getTreeAllIds(items.childs, ids)
         }
@@ -515,6 +593,19 @@ export default {
     pageChange(page) {
       this.getBugListParams.index = (page - 1) * 10
       this.fetchData()
+    },
+    handleCheckChange(data, checked, indeterminate) {
+      console.log(data, checked, indeterminate)
+    },
+    changeTimeRange(time) {
+      this.bugFileform.startTime = new Date(((new Date()).getTime() - 60 * 1000 * time))
+      this.bugFileform.endTime = new Date()
+    },
+    getMaxBugTime() {
+      getMaxBugTime().then(response => {
+        this.maxBugTime = response
+        console.log(response)
+      })
     }
   }
 }
@@ -534,4 +625,16 @@ export default {
 .el-tag{
   cursor: pointer;
 }
+.wrap_one{
+  max-width: 500px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 18px;
+  cursor: pointer;
+}
+.tooltipdescription{
+  max-width: 500px;
+}
+
 </style>

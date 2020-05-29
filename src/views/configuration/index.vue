@@ -33,8 +33,8 @@
       <el-form-item label="log上传地址">
         <el-radio-group v-model="form.BUG_FILE_STORAGE_TYPE">
           <el-radio label="1">本地</el-radio>
-          <el-radio label="2">上传云端</el-radio>
-          <el-radio label="3">客户自己选择</el-radio>
+          <el-radio label="2" disabled>上传云端</el-radio>
+          <el-radio label="3" disabled>客户自己选择</el-radio>
         </el-radio-group>
       </el-form-item>
       <el-form-item label="邮件发送日志附件">
@@ -49,7 +49,7 @@
         </el-select>
       </el-form-item>
       <el-form-item label="描述模板">
-        <el-input v-model="form.BUG_CONTENT_TEMPLATE" type="textarea" :rows="4" placeholder="请输入内容" />
+        <el-input v-model="form.BUG_CONTENT_TEMPLATE" type="textarea" :rows="4" placeholder="请输入内容" maxlength="1000" show-word-limit />
       </el-form-item>
       <el-divider content-position="left">发送邮箱配置</el-divider>
       <el-form-item label="SMTP服务器地址">
@@ -59,7 +59,7 @@
         <el-input v-model="form.MAIL_USERNAME" />
       </el-form-item>
       <el-form-item label="邮箱密码">
-        <el-input v-model="form.MAIL_PWD" />
+        <el-input v-model="form.MAIL_PWD" type="password" />
       </el-form-item>
       <el-form-item label="发送人邮">
         <el-input v-model="form.MAIL_SENDER" />

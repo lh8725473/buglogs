@@ -4,9 +4,9 @@
 
     <breadcrumb class="breadcrumb-container" />
 
-    <div class="right-menu">
+    <div class="right-menu" :class="{ 'show-avatar': role === 'bugadmin' }">
       <span class="total-file-size">日志总大小: <span>{{ totalBugFileSize | statusFilter }}</span></span>
-      <el-dropdown class="avatar-container" trigger="click">
+      <el-dropdown v-show="role === 'bugadmin'" class="avatar-container" trigger="click">
         <div class="avatar-wrapper">
           <img :src="avatar+'?imageView2/1/w/80/h/80'" class="user-avatar">
           <i class="el-icon-caret-bottom" />
@@ -49,6 +49,7 @@ import Hamburger from '@/components/Hamburger'
 import { logout } from '@/api/user'
 import { totalBugFileSize } from '@/api/bug'
 import { restPwd } from '@/api/config'
+import { removeToken, removeUserId } from '@/utils/auth'
 
 export default {
   components: {
@@ -58,7 +59,8 @@ export default {
   computed: {
     ...mapGetters([
       'sidebar',
-      'avatar'
+      'avatar',
+      'role'
     ])
   },
   filters: {
@@ -116,7 +118,11 @@ export default {
     restPwd() {
       restPwd(this.form).then(response => {
         if (response) {
+          this.dialogFormVisible = false
+          removeToken()
+          removeUserId()
           this.$message('修改密码成功')
+          this.$router.push({ path: '/login' })
         }
       })
     }
@@ -153,14 +159,23 @@ export default {
     float: right;
     height: 100%;
     line-height: 50px;
+    &.show-avatar{
+      .total-file-size{
+        position: relative;
+        margin-right: 0px;
+        top: -15px;
+        span{
+          color: #409EFF;
+        }
+      }
+    }
     .total-file-size{
       position: relative;
-      top: -15px;
+      margin-right: 10px;
       span{
         color: #409EFF;
       }
     }
-
     &:focus {
       outline: none;
     }

@@ -105,3 +105,16 @@ export function param2Obj(url) {
       '"}'
   )
 }
+
+export function formatSeconds(value) {
+  const result = parseInt(value)
+  const h = Math.floor(result / 3600) < 10 ? '0' + Math.floor(result / 3600) : Math.floor(result / 3600)
+  const m = Math.floor((result / 60 % 60)) < 10 ? '0' + Math.floor((result / 60 % 60)) : Math.floor((result / 60 % 60))
+  const s = Math.floor((result % 60)) < 10 ? '0' + Math.floor((result % 60)) : Math.floor((result % 60))
+
+  let res = ''
+  if (h !== '00') res += `${h}h`
+  if (m !== '00') res += `${m}m`
+  if (s !== '00') res += `${m}s`
+  return res
+}

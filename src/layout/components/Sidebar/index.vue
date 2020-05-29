@@ -35,10 +35,10 @@ export default {
     routes() {
       console.log(this.role)
       if (this.role === 'sysadmin') {
-        this.$router.options.routes[3].hidden = false
+        this.$router.options.routes[4].hidden = false
         return this.$router.options.routes
       } else {
-        this.$router.options.routes[3].hidden = true
+        this.$router.options.routes[4].hidden = true
         return this.$router.options.routes
       }
     },

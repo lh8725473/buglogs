@@ -41,12 +41,12 @@
         </span>
       </el-form-item>
 
-      <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">Login</el-button>
+      <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">登录</el-button>
 
-      <div class="tips">
+      <!-- <div class="tips">
         <span style="margin-right:20px;">username: admin</span>
         <span> password: any</span>
-      </div>
+      </div> -->
 
     </el-form>
   </div>
@@ -117,6 +117,7 @@ export default {
           console.log(md5js(this.loginForm.password))
           postLoginForm.pwd = md5js(this.loginForm.password)
           login(postLoginForm).then(response => {
+            console.log(response)
             this.$store.dispatch('app/toggleUserId', response.userId)
             this.$store.dispatch('app/toggleToken', response.token)
             setToken(response.token)

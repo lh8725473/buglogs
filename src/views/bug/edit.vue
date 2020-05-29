@@ -84,10 +84,7 @@ export default {
       this.$message('submit!')
     },
     onCancel() {
-      this.$message({
-        message: 'cancel!',
-        type: 'warning'
-      })
+      this.$router.push('/bug/list')
     },
     editbsbug() {
       updatebsbug(this.form).then(response => {

@@ -1,7 +1,8 @@
 import axios from 'axios'
 import { MessageBox, Message } from 'element-ui'
 import store from '@/store'
-import { getToken, setToken, setUserId, setBaseURL, getBaseURL } from '@/utils/auth'
+import router from '@/router'
+import { getToken, setToken, setUserId, setBaseURL, getBaseURL, removeToken, removeUserId} from '@/utils/auth'
 
 // create an axios instance
 function GetRequest() {
@@ -110,6 +111,13 @@ service.interceptors.response.use(
       //     })
       //   })
       // }
+      if (res.status === -7) {
+        console.log(res)
+        removeToken()
+        removeUserId()
+        router.push({ path: '/401' })
+      }
+
       return Promise.reject(new Error(res.message || 'Error'))
     } else {
       return res.data

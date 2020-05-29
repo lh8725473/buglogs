@@ -2,10 +2,10 @@
   <div class="app-container">
     <el-form ref="form" :model="form" label-width="120px">
       <el-form-item label="标题">
-        <el-input v-model="form.name" />
+        <el-input v-model="form.name" maxlength="100" />
       </el-form-item>
       <el-form-item label="描述">
-        <el-input v-model="form.description" type="textarea" :rows="4" placeholder="请输入内容" />
+        <el-input v-model="form.description" type="textarea" :rows="4" placeholder="请输入内容" maxlength="1000" show-word-limit />
       </el-form-item>
       <el-form-item label="收件人邮箱">
         <el-select v-model="form.extEmail" clearable remote multiple filterable allow-create default-first-option placeholder="输入邮箱，用回车添加" @change="changeEmails">
@@ -47,8 +47,8 @@
       </el-form-item>
       <el-form-item label="是否上传到云端">
         <el-radio-group v-model="form.storageType">
-          <el-radio label="1">是</el-radio>
-          <el-radio label="2">否</el-radio>
+          <el-radio label="2" disabled>是</el-radio>
+          <el-radio label="1">否</el-radio>
         </el-radio-group>
       </el-form-item>
       <el-form-item label="收集的日志类型">
@@ -73,7 +73,7 @@
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="addbsbug">提交bug</el-button>
-        <el-button @click="onCancel">取消</el-button>
+        <!-- <el-button @click="onCancel">取消</el-button> -->
       </el-form-item>
     </el-form>
   </div>
@@ -83,9 +83,24 @@
 
 import { addbsbug, getbsbugfiletypes, getMaxBugTime } from '@/api/bug'
 import { getBugContentTemplate } from '@/api/config'
+import { formatSeconds } from '@/utils/index'
 import _ from 'lodash'
 
 export default {
+  filters: {
+    // formatSeconds(value) {
+    //   const result = parseInt(value)
+    //   const h = Math.floor(result / 3600) < 10 ? '0' + Math.floor(result / 3600) : Math.floor(result / 3600)
+    //   const m = Math.floor((result / 60 % 60)) < 10 ? '0' + Math.floor((result / 60 % 60)) : Math.floor((result / 60 % 60))
+    //   const s = Math.floor((result % 60)) < 10 ? '0' + Math.floor((result % 60)) : Math.floor((result % 60))
+
+    //   let res = ''
+    //   if (h !== '00') res += `${h}h`
+    //   if (m !== '00') res += `${m}min`
+    //   res += `${s}s`
+    //   return res
+    // }
+  },
   data() {
     return {
       form: {
@@ -138,7 +153,15 @@ export default {
     },
     addbsbug() {
       if (this.form.endTime.getTime() - this.form.startTime.getTime() > this.maxBugTime * 1000) {
-        this.$message('log记录时间超过最大限制:' + this.maxBugTime + 's')
+        this.$message('log记录时间超过最大限制:' + formatSeconds(this.maxBugTime))
+        return
+      }
+      if (this.form.endTime.getTime() - this.form.startTime.getTime() <= 0) {
+        this.$message('开始时间不能大于结束时间')
+        return
+      }
+      if (this.form.endTime.getTime() - (new Date()).getTime() > 0) {
+        this.$message('结束时间不能当前时间')
         return
       }
       const postform = this.form
