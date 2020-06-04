@@ -25,13 +25,13 @@
     <el-dialog title="修改密码" :visible.sync="dialogFormVisible">
       <el-form :model="form">
         <el-form-item label="旧密码">
-          <el-input v-model="form.LOGIN_PWD_OLD" autocomplete="off" />
+          <el-input v-model="form.LOGIN_PWD_OLD" type="password" />
         </el-form-item>
         <el-form-item label="新密码">
-          <el-input v-model="form.LOGIN_PWD" autocomplete="off" />
+          <el-input v-model="form.LOGIN_PWD" type="password" />
         </el-form-item>
         <el-form-item label="确认新密码">
-          <el-input v-model="form.LOGIN_PWD_REVIEW" autocomplete="off" />
+          <el-input v-model="form.LOGIN_PWD_REVIEW" type="password" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -116,6 +116,18 @@ export default {
       })
     },
     restPwd() {
+      if (!this.form.LOGIN_PWD_OLD) {
+        this.$message('旧密码不能为空')
+        return
+      }
+      if (!this.form.LOGIN_PWD) {
+        this.$message('新密码不能为空')
+        return
+      }
+      if (this.form.LOGIN_PWD !== this.form.LOGIN_PWD_REVIEW) {
+        this.$message('新密码与确认密码不一致')
+        return
+      }
       restPwd(this.form).then(response => {
         if (response) {
           this.dialogFormVisible = false
@@ -123,6 +135,9 @@ export default {
           removeUserId()
           this.$message('修改密码成功')
           this.$router.push({ path: '/login' })
+        } else {
+          this.$message('旧密码不正确')
+          return
         }
       })
     }

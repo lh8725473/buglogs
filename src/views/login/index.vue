@@ -117,7 +117,7 @@ export default {
           console.log(md5js(this.loginForm.password))
           postLoginForm.pwd = md5js(this.loginForm.password)
           login(postLoginForm).then(response => {
-            console.log(response)
+            this.loading = false
             this.$store.dispatch('app/toggleUserId', response.userId)
             this.$store.dispatch('app/toggleToken', response.token)
             setToken(response.token)
@@ -126,6 +126,12 @@ export default {
               this.$store.dispatch('app/toggleRole', response)
               this.$router.push({ path: '/bug/list' })
             })
+          }).catch(() => {
+            this.loading = false
+            // this.$message({
+            //   message: '账号或密码不正确',
+            //   type: 'error'
+            // })
           })
         }
       })

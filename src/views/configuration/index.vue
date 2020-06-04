@@ -5,12 +5,12 @@
       <el-form-item label="客户名称">
         <el-input v-model="form.CLIENT_NAME" />
       </el-form-item>
-      <el-form-item label="功能是否开始">
+      <!-- <el-form-item label="功能是否开始">
         <el-radio-group v-model="form.FUNC_ENABLE">
           <el-radio label="1">是</el-radio>
           <el-radio label="2">否</el-radio>
         </el-radio-group>
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item label="客户地址">
         <el-input v-model="form.CLIENT_CONTACT_ADDRESS" />
       </el-form-item>
@@ -29,7 +29,7 @@
       <!-- <el-form-item label="管理员登录密码">
         <el-input v-model="form.LOGIN_PWD" />
       </el-form-item> -->
-      <el-divider content-position="left">bug提交</el-divider>
+      <el-divider content-position="left">问题提交</el-divider>
       <el-form-item label="log上传地址">
         <el-radio-group v-model="form.BUG_FILE_STORAGE_TYPE">
           <el-radio label="1">本地</el-radio>
@@ -163,12 +163,18 @@ export default {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .line{
   text-align: center;
 }
 .el-select{
   width: 100%;
+}
+.el-divider--horizontal{
+  margin: 30px 0;
+  .el-divider__text.is-left{
+    font-size: 20px;
+  }
 }
 </style>
 

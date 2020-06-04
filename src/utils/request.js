@@ -111,7 +111,7 @@ service.interceptors.response.use(
       //     })
       //   })
       // }
-      if (res.status === -7) {
+      if (res.status === -7 || res.status === -8) {
         console.log(res)
         removeToken()
         removeUserId()

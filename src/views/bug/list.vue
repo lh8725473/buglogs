@@ -3,7 +3,8 @@
     <div class="search-action">
       <el-button type="primary" size="small" @click="addBug()">添加</el-button>
       <el-button type="primary" size="small" :disabled="buttonDis.deleteBug" @click="deletebsbugs()">删除</el-button>
-      <el-button type="primary" size="small" :disabled="buttonDis.fixBug" @click="resolves()">修复</el-button>
+      <el-button type="primary" size="small" :disabled="buttonDis.fixBug" @click="resolves()">标记修复</el-button>
+      <el-button type="primary" size="small" :disabled="buttonDis.download" @click="downloadBug()">下载</el-button>
     </div>
     <el-table
       v-loading="listLoading"
@@ -18,7 +19,7 @@
         type="selection"
         width="40"
       />
-      <el-table-column label="ID" width="150">
+      <el-table-column label="ID" width="110">
         <template slot-scope="scope">
           {{ scope.row.bugId }}
         </template>
@@ -45,16 +46,6 @@
           <span>{{ scope.row.osVer }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="创建时间" width="160" align="center">
-        <template slot-scope="scope">
-          {{ scope.row.createTime }}
-        </template>
-      </el-table-column>
-      <el-table-column label="提出人" width="110" align="center">
-        <template slot-scope="scope">
-          {{ scope.row.userName }}
-        </template>
-      </el-table-column>
       <el-table-column class-name="status-col" label="状态" width="110" align="center">
         <template slot-scope="scope">
           <el-popover
@@ -72,8 +63,23 @@
                 {{ activity.description }}
               </el-timeline-item>
             </el-timeline>
-            <el-tag slot="reference" :type="scope.row.status | statusFilter" @click="getbugs(scope.row)">{{ scope.row.status | bugStatus }}</el-tag>
+            <el-link slot="reference" :type="scope.row.status | statusFilter" @click="getbugs(scope.row)">{{ scope.row.status | bugStatus }}</el-link>
           </el-popover>
+        </template>
+      </el-table-column>
+      <el-table-column class-name="status-col" label="日志状态" width="110" align="center">
+        <template slot-scope="scope">
+          <span>{{ scope.row.bugFileStatus | bugFileStatusFilter }}<i v-show="scope.row.bugFileStatus === 1" class="el-icon-loading" /></span>
+        </template>
+      </el-table-column>
+      <el-table-column label="创建时间" width="160" align="center">
+        <template slot-scope="scope">
+          {{ scope.row.createTime }}
+        </template>
+      </el-table-column>
+      <el-table-column label="提出人" width="110" align="center">
+        <template slot-scope="scope">
+          {{ scope.row.userName }}
         </template>
       </el-table-column>
       <el-table-column label="修复人" width="110" align="center">
@@ -91,7 +97,7 @@
           <el-link type="primary" @click="openBugFileList(scope.row.bugId)">{{ scope.row.logFileNum }}</el-link>
         </template>
       </el-table-column>
-      <el-table-column
+      <!-- <el-table-column
         fixed="right"
         label="操作"
         width="130"
@@ -101,7 +107,7 @@
           <el-button type="text" size="small" @click="editBug(scope.row)">编辑</el-button>
           <el-button type="text" size="small" :disabled="scope.row.status === 2" @click="fixBug(scope.row)">修复</el-button>
         </template>
-      </el-table-column>
+      </el-table-column> -->
     </el-table>
     <el-pagination
       background
@@ -139,10 +145,15 @@
             <el-col :span="11">
               <el-date-picker v-model="bugFileform.startTime" :format="'yyyy-MM-dd HH:mm'" type="datetime" placeholder="选择开始时间" style="width: 100%;" />
             </el-col>
-            <el-col :span="2" class="line">-</el-col>
+            <el-col :span="2" class="line">至</el-col>
             <el-col :span="11">
               <el-date-picker v-model="bugFileform.endTime" :format="'yyyy-MM-dd HH:mm'" type="datetime" placeholder="选择结束时间" style="width: 100%;" />
             </el-col>
+          </el-form-item>
+          <el-form-item label="收件人邮箱">
+            <el-select v-model="bugFileform.extEmail" clearable remote multiple filterable allow-create default-first-option placeholder="输入邮箱，用回车添加" @change="changeEmails">
+              <el-option v-for="item in knowledge" :key="item.value" :label="item.label" :value="item.label" />
+            </el-select>
           </el-form-item>
           <el-form-item label="是否上传到云端">
             <el-radio-group v-model="bugFileform.storageType">
@@ -197,7 +208,7 @@
             {{ scope.row.fileSize | fileSizeFilter }}
           </template>
         </el-table-column>
-        <el-table-column property="fileType" label="文件类型" />
+        <el-table-column property="fileTypeHTML" label="文件类型" width="200" show-overflow-tooltip />
         <el-table-column property="status" label="状态">
           <template slot-scope="scope">
             {{ scope.row.status | bugFileStatus }}
@@ -206,11 +217,6 @@
         <el-table-column property="storageType" label="存储方式">
           <template slot-scope="scope">
             {{ scope.row.storageType | storageType }}
-          </template>
-        </el-table-column>
-        <el-table-column property="uploadStatus" label="上传状态">
-          <template slot-scope="scope">
-            {{ scope.row.uploadStatus | uploadStatus }}
           </template>
         </el-table-column>
         <el-table-column
@@ -280,6 +286,13 @@ export default {
       }
       return uploadStatusMap[uploadStatus]
     },
+    bugFileStatusFilter(bugFileStatus) {
+      const bugFileStatusMap = {
+        1: '生成中',
+        2: '已完成'
+      }
+      return bugFileStatusMap[bugFileStatus]
+    },
     fileSizeFilter(limit) {
       var size = ''
       if (limit < 0.1 * 1024) { // 如果小于0.1KB转化成B
@@ -309,6 +322,7 @@ export default {
   },
   data() {
     return {
+      stringText: '模板：↵版本',
       getBugListParams: {
         userId: this.$store.state.app.userId,
         status: '',
@@ -334,7 +348,8 @@ export default {
       buttonDis: {
         deleteBug: true,
         fixBug: true,
-        deleteFile: true
+        deleteFile: true,
+        download: true
       },
       bugfiletypes: [],
       reverse: false,
@@ -344,11 +359,29 @@ export default {
         children: 'childs',
         label: 'name'
       },
-      maxBugTime: 0
+      maxBugTime: 0,
+      knowledge: []
     }
   },
   created() {
     this.fetchData()
+  },
+  mounted() {
+    this.$socket.emit('bs_message_to', {
+      opera: 'on',
+      token: this.$store.state.app.token
+    })
+    this.$socket.on('bs_message_get', (data) => {
+      console.log(data)
+      const bugInfo = _.find(this.list, { bugId: data.bugId })
+      if (bugInfo) {
+        this.$set(bugInfo, 'bugFileStatus', data.bugFileStatus)
+      }
+      const bugFileInfo = _.find(this.bugFileList, { id: data.bugFileId })
+      if (bugFileInfo) {
+        this.$set(bugFileInfo, 'status', data.status)
+      }
+    })
   },
   methods: {
     fetchData() {
@@ -356,6 +389,9 @@ export default {
       getbuglist(this.getBugListParams).then(response => {
         this.list = response.data
         this.total = response.total
+        _.forEach(this.list, (item) => {
+          console.log(item.description)
+        })
         this.listLoading = false
       })
     },
@@ -428,13 +464,21 @@ export default {
         return
       }
       if (this.bugFileform.endTime.getTime() - (new Date()).getTime() > 0) {
-        this.$message('结束时间不能当前时间')
+        this.$message('结束时间不能大于当前时间')
         return
       }
+      const postform = _.clone(this.bugFileform)
       if (this.bugFileform.fileType) {
-        this.bugFileform.fileType = this.$refs.tree.getCheckedKeys().join(';')
+        postform.fileType = this.$refs.tree.getCheckedKeys().join(';')
+        if (!postform.fileType) {
+          this.$message('请选择收集日志类型')
+          return
+        }
       }
-      addbsbugfile(this.bugFileform).then(response => {
+      if (this.bugFileform.extEmail) {
+        postform.extEmail = this.bugFileform.extEmail.join(';')
+      }
+      addbsbugfile(postform).then(response => {
         if (response) {
           this.$message('添加bug日志成功')
           listbsbugfile({
@@ -514,6 +558,11 @@ export default {
       } else {
         this.buttonDis.fixBug = true
       }
+      if (this.multipleSelection.length === 1 && _.find(this.multipleSelection, { bugFileStatus: 2 })) {
+        this.buttonDis.download = false
+      } else {
+        this.buttonDis.download = true
+      }
     },
     bugFileSelectionChange(val) {
       this.bugFileMultipleSelection = val
@@ -566,7 +615,6 @@ export default {
     getbsbugfiletypes() {
       getbsbugfiletypes().then(response => {
         this.bugfiletypes = response
-        console.log(this.getTreeAllIds(this.bugfiletypes))
         this.defaultCheckedKeys = this.getTreeAllIds(this.bugfiletypes)
         this.bugFileform.fileType = response
       })
@@ -606,12 +654,27 @@ export default {
         this.maxBugTime = response
         console.log(response)
       })
+    },
+    downloadBug() {
+      console.log(_.map(this.multipleSelection, 'bugId'))
+      if (getBaseURL()) {
+        window.open(getBaseURL() + '/bsbug/downloadbug?bugIds=' + _.map(this.multipleSelection, 'bugId') + '&token=' + this.$store.state.app.token + '&userId=' + this.$store.state.app.userId)
+      } else {
+        window.open(process.env.VUE_APP_BASE_API + '/bsbug/downloadbug?bugIds=' + _.map(this.multipleSelection, 'bugId') + '&token=' + this.$store.state.app.token + '&userId=' + this.$store.state.app.userId)
+      }
+    },
+    changeEmails(emails) {
+      var reg = /^([a-zA-Z0-9])(\w|\-)+@[a-zA-Z0-9]+\.([a-zA-Z]{2,4})$/
+      _.remove(emails, email => {
+        return !(reg.test(email))
+      })
+      console.log(emails)
     }
   }
 }
 </script>
 
-<style scoped>
+<style lang="scss">
 .search-action{
   margin-bottom: 15px;
 }
@@ -635,6 +698,45 @@ export default {
 }
 .tooltipdescription{
   max-width: 500px;
+  white-space: pre-wrap;
+}
+
+// .el-link{
+//   text-decoration: underline;
+// }
+
+.el-link.is-underline:after{
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  bottom: 0;
+  border-bottom: 1px solid #409EFF;
+}
+
+.el-link--danger.is-underline:after{
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  bottom: 0;
+  border-bottom: 1px solid #F56C6C;
+}
+
+.el-link--success.is-underline:after{
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  bottom: 0;
+  border-bottom: 1px solid #67C23A;
+}
+
+.el-select{
+  width: 100%;
 }
 
 </style>

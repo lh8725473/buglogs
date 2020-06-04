@@ -88,26 +88,26 @@ export const constantRoutes = [
     component: Layout,
     redirect: '/bug/add',
     name: 'Bug',
-    meta: { title: '日志管理', icon: 'example' },
+    meta: { title: '问题管理', icon: 'log' },
     children: [
       {
         path: 'add',
         name: 'addBug',
         component: () => import('@/views/bug/add'),
-        meta: { title: '提交bug', icon: 'form' }
+        meta: { title: '提交问题', icon: 'link' }
       },
       {
         path: 'edit',
         name: 'editBug',
         component: () => import('@/views/bug/edit'),
-        meta: { title: '编辑bug', icon: 'form' },
+        meta: { title: '问题列表', icon: 'form' },
         hidden: true
       },
       {
         path: 'list',
         name: 'listBug',
         component: () => import('@/views/bug/list'),
-        meta: { title: 'bug列表', icon: 'form' }
+        meta: { title: '问题列表', icon: 'list' }
       }
     ]
   },
@@ -120,7 +120,7 @@ export const constantRoutes = [
         path: 'index',
         name: 'Configuration',
         component: () => import('@/views/configuration/index'),
-        meta: { title: 'bug全局配置', icon: 'form' }
+        meta: { title: '功能全局配置', icon: 'setting' }
       }
     ]
   },

@@ -13,11 +13,6 @@
         </el-select>
       </el-form-item>
       <el-form-item label="log记录时间">
-        <!-- <el-radio-group v-model="form.timeRange">
-          <el-radio-button label="3">3分钟内</el-radio-button>
-          <el-radio-button label="5">5分钟内</el-radio-button>
-          <el-radio-button label="10">5分钟内</el-radio-button>
-        </el-radio-group> -->
         <el-button-group>
           <el-button @click="changeTimeRange(3)">3分钟内</el-button>
           <el-button @click="changeTimeRange(5)">5分钟内</el-button>
@@ -25,7 +20,7 @@
         </el-button-group>
       </el-form-item>
       <el-form-item label="">
-        <el-col :span="11">
+        <el-col :span="8">
           <el-date-picker
             v-model="form.startTime"
             :format="'yyyy-MM-dd HH:mm'"
@@ -34,8 +29,8 @@
             style="width: 100%;"
           />
         </el-col>
-        <el-col :span="2" class="line">-</el-col>
-        <el-col :span="11">
+        <el-col :span="2" class="line">至</el-col>
+        <el-col :span="8">
           <el-date-picker
             v-model="form.endTime"
             :format="'yyyy-MM-dd HH:mm'"
@@ -72,10 +67,23 @@
         </el-checkbox-group> -->
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="addbsbug">提交bug</el-button>
+        <el-button type="primary" @click="addbsbug">提 交</el-button>
         <!-- <el-button @click="onCancel">取消</el-button> -->
       </el-form-item>
     </el-form>
+
+    <el-dialog
+      title="提交成功"
+      :visible.sync="dialogVisible"
+      :close-on-click-modal="false"
+      :show-close="false"
+      width="40%"
+    >
+      <div class="bug-info">系统生成bug成功，已生成bug编号<span class="bug-id">{{ bugInfo.bugId }}</span></div>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="goList()">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -124,13 +132,26 @@ export default {
       bugfiletypes: [],
       defaultCheckedKeys: [],
       knowledge: [],
-      maxBugTime: 0
+      maxBugTime: 0,
+      dialogVisible: false,
+      bugInfo: {
+        bugId: 0
+      }
     }
   },
   created() {
     this.getbsbugfiletypes()
     this.getBugContentTemplate()
     this.getMaxBugTime()
+  },
+  mounted() {
+    this.$socket.emit('bs_message_to', {
+      opera: 'on',
+      token: this.$store.state.app.token
+    })
+    this.$socket.on('bs_message_get', (data) => {
+      console.log(data)
+    })
   },
   methods: {
     getBugContentTemplate() {
@@ -152,6 +173,14 @@ export default {
       })
     },
     addbsbug() {
+      if (!this.form.name) {
+        this.$message('标题不能为空')
+        return
+      }
+      if (!this.form.description) {
+        this.$message('描述不能为空')
+        return
+      }
       if (this.form.endTime.getTime() - this.form.startTime.getTime() > this.maxBugTime * 1000) {
         this.$message('log记录时间超过最大限制:' + formatSeconds(this.maxBugTime))
         return
@@ -161,21 +190,26 @@ export default {
         return
       }
       if (this.form.endTime.getTime() - (new Date()).getTime() > 0) {
-        this.$message('结束时间不能当前时间')
+        this.$message('结束时间不能大于当前时间')
         return
       }
-      const postform = this.form
+      const postform = _.clone(this.form)
       if (this.form.extEmail) {
         postform.extEmail = this.form.extEmail.join(';')
       }
-      console.log(this.form.fileType)
       if (this.form.fileType) {
         postform.fileType = this.$refs.tree.getCheckedKeys().join(';')
+        if (!postform.fileType) {
+          this.$message('请选择收集日志类型')
+          return
+        }
       }
-      addbsbug(this.form).then(response => {
-        if (response === true) {
-          this.$message('提交bug成功')
-          this.$router.push({ path: '/bug/list' })
+      addbsbug(postform).then(response => {
+        if (response.status === true) {
+          this.bugInfo = response
+          this.dialogVisible = true
+          // this.$message('提交bug成功')
+          // this.$router.push({ path: '/bug/list' })
         }
       })
     },
@@ -214,17 +248,27 @@ export default {
         this.maxBugTime = response
         console.log(response)
       })
+    },
+    goList() {
+      this.$router.push({ path: '/bug/list' })
     }
   }
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .line{
   text-align: center;
 }
 .el-select{
   width: 100%;
+}
+.bug-info{
+  font-size: 16px;
+  .bug-id{
+    font-size: 25px;
+    color: #409EFF;
+  }
 }
 </style>
 
